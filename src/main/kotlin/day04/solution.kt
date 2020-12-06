@@ -1,6 +1,6 @@
 package day04
 
-import util.loadInput
+import util.loadInputGrouped
 
 private const val PROPERTY_VALUE_MARK = ':'
 
@@ -19,20 +19,6 @@ class Passport(
     fun containsValidProperties(validations: List<Pair<String, (String) -> Boolean>>): Boolean =
         validations.all { properties[it.first]?.takeIf(it.second) != null }
 }
-
-private fun parsePassports(input: List<String>): Sequence<Passport> =
-    sequence {
-        val attributes = mutableListOf<String>()
-        for (line in input) {
-            if (line.isBlank() && attributes.isNotEmpty()) {
-                yield(Passport(attributes))
-                attributes.clear()
-            } else {
-                attributes.addAll(line.split(Regex("\\s+")))
-            }
-        }
-        if (attributes.isNotEmpty()) yield(Passport(attributes))
-    }
 
 private val propertyNames: List<String> = listOf("byr", "iyr", "eyr", "hgt", "hcl", "ecl", "pid")
 
@@ -53,7 +39,9 @@ private val validations: List<Pair<String, (String) -> Boolean>> = listOf(
 fun main() {
     var propertiesExistenceCount = 0
     var propertiesValidationCount = 0
-    parsePassports(loadInput(4))
+    loadInputGrouped(4)
+        .map { group -> group.flatMap { it.split(Regex("\\s+")) } }
+        .map { Passport(it) }
         .forEach {
             if (it.containsProperties(propertyNames)) propertiesExistenceCount++
             if (it.containsValidProperties(validations)) propertiesValidationCount++

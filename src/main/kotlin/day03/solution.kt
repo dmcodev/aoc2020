@@ -3,7 +3,7 @@ package day03
 import util.loadInput
 
 fun String.isTree(position: Int): Boolean =
-    get(position - (length * (position / length))) == '#'
+    get(position % length) == '#'
 
 fun List<String>.countTrees( deltaX: Int, deltaY: Int): Int {
     var x = 0
