@@ -3,29 +3,52 @@ package day15
 import util.loadInput
 
 fun main() {
-    partOne()
-    partTwo()
+    val input = loadInput(15)[0].split(",").map { it.toLong() }
+    partOne(input)
+    partTwo(input)
 }
 
-private fun partOne() = solve(2020)
-private fun partTwo() = solve(30000000)
+private fun partOne(input: List<Long>) = solve(input, 2020)
+private fun partTwo(input: List<Long>) = solve(input, 30000000)
 
-private fun solve(stopAfterTurn: Int) {
-    val input = loadInput(15)[0].split(",").map { it.toLong() }
-    val history = mutableMapOf<Long, MutableList<Int>>()
-    fun historyFor(number: Long) = history.computeIfAbsent(number) { mutableListOf() }
-    input.forEachIndexed { turn, number -> historyFor(number).add(turn + 1) }
-    var turn = input.size + 1
+private class NumberHistory {
+
+    private val history = IntArray(2) { 0 }
+
+    fun addTurn(turn: Int) {
+        history[0] = history[1]
+        history[1] = turn
+    }
+
+    fun spokenBefore() = history[0] != 0
+
+    fun turnsApart() = (history[1] - history[0]).toLong()
+}
+
+private class History(input: List<Long>) {
+
+    private val history = mutableMapOf<Long, NumberHistory>()
+
+    init {
+        input.forEachIndexed { turn, number -> numberHistory(number).addTurn(turn + 1) }
+    }
+
+    fun numberSpokenBefore(number: Long) = numberHistory(number).spokenBefore()
+
+    fun numberTurnsApart(number: Long) = numberHistory(number).turnsApart()
+
+    fun addNumberTurn(number: Long, turn: Int) = numberHistory(number).addTurn(turn)
+
+    private fun numberHistory(number: Long) = history.computeIfAbsent(number) { NumberHistory() }
+}
+
+private fun solve(input: List<Long>, stopAfterTurn: Int) {
+    val history = History(input)
+    var turn = input.size
     var last = input.last()
-    while (turn <= stopAfterTurn) {
-        val next = if (history[last]?.size ?: 0 < 2) {
-            0L
-        } else {
-            historyFor(last).let { it[it.size - 1].toLong() - it[it.size - 2] }
-        }
-        historyFor(next).add(turn)
-        last = next
-        turn++
+    while (++turn <= stopAfterTurn) {
+        last = if (history.numberSpokenBefore(last)) history.numberTurnsApart(last) else 0L
+        history.addNumberTurn(last, turn)
     }
     println(last)
 }
